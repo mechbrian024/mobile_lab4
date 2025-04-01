@@ -71,4 +71,10 @@ dependencies {
 
     // Optionally, you can include the widgets library for ScaleBar, etc.
     implementation ("com.google.maps.android:maps-compose-widgets:6.2.1")
+
+    // GMS -Google Mobile Services
+    implementation(libs.play.services.location)
+
+    // Persissions
+    implementation(libs.accompanist.permissions)
 }

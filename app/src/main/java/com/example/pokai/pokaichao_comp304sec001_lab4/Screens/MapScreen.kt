@@ -61,36 +61,30 @@ fun MapScreen(navController: NavHostController) {
     var location by remember { mutableStateOf<Location?>(null) }
     val coroutineScope = rememberCoroutineScope()
 
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        if (!locationPermissions.allPermissionsGranted || locationPermissions.shouldShowRationale) {
-            locationPermissions.launchMultiplePermissionRequest()
-        } else {
-            coroutineScope.launch {
-                location = locationManager.getLocation()
-            }
+    if (!locationPermissions.allPermissionsGranted || locationPermissions.shouldShowRationale) {
+        locationPermissions.launchMultiplePermissionRequest()
+    } else {
+        coroutineScope.launch {
+            location = locationManager.getLocation()
         }
+    }
 
-        location?.let {
+    location?.let {
             val loc = LatLng(it.latitude, it.longitude)
-//            val loc = LatLng(43.785179518472084, -79.22785228776489)
+//        val loc = LatLng(43.785179518472084, -79.22785228776489)
 
-            // rememberCameraPositionState() is a function that returns a CameraPositionState object
-            val cameraPositionState = rememberCameraPositionState {
-                position = CameraPosition.fromLatLngZoom(loc, 5f)
-            }
-            GoogleMap(
-                modifier = Modifier.fillMaxSize(),
-                cameraPositionState = cameraPositionState
-            ){
-                Marker(
-                    state = MarkerState(position = loc),
-                    title = "Marker at my location"
-                )
-            }
+        // rememberCameraPositionState() is a function that returns a CameraPositionState object
+        val cameraPositionState = rememberCameraPositionState {
+            position = CameraPosition.fromLatLngZoom(loc, 12f)
+        }
+        GoogleMap(
+            modifier = Modifier.fillMaxSize(),
+            cameraPositionState = cameraPositionState
+        ) {
+            Marker(
+                state = MarkerState(position = loc),
+                title = "Marker at my location"
+            )
         }
     }
 }

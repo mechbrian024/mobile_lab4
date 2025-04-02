@@ -8,6 +8,9 @@
     <!-- Include only if your app benefits from precise location access. -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
+    <!-- Required only when requesting background location access on Android 10 (API level 29) and higher. -->
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -34,7 +37,7 @@
         <!--        google maps api key-->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyCuKLEqUWEwDCMHku0rY9BrLD_eQkecwzU" />
+            android:value="AIzaSyAGv0amgYeDN61Ybr4RMkm-rHQhXpqD8O8" />
 
     </application>
 

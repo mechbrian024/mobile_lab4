@@ -62,19 +62,21 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
 
     // compose maps library
-    implementation("com.google.maps.android:maps-compose:4.3.3")
+    implementation(libs.maps.compose)
     // implementation (com.google.maps.android:maps-compose:6.2.1)
 
     // Optionally, you can include the Compose utils library for Clustering,
     // Street View metadata checks, etc.
-    implementation ("com.google.maps.android:maps-compose-utils:6.2.1")
+    implementation (libs.maps.compose.utils)
 
     // Optionally, you can include the widgets library for ScaleBar, etc.
-    implementation ("com.google.maps.android:maps-compose-widgets:6.2.1")
+    implementation (libs.maps.compose.widgets)
 
     // GMS -Google Mobile Services
     implementation(libs.play.services.location)
 
     // Persissions
     implementation(libs.accompanist.permissions)
+
+    implementation(libs.play.services.location.v2101)
 }

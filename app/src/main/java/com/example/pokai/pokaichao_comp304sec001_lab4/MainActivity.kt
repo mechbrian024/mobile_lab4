@@ -13,15 +13,18 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.app.ActivityCompat
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.pokai.pokaichao_comp304sec001_lab4.Screens.CategoryScreen
 import com.example.pokai.pokaichao_comp304sec001_lab4.Screens.HomeScreen
 import com.example.pokai.pokaichao_comp304sec001_lab4.Screens.MapScreen
 import com.example.pokai.pokaichao_comp304sec001_lab4.Screens.MapScreen2
+import com.example.pokai.pokaichao_comp304sec001_lab4.ui.theme.Pokaichao_COMP304Sec001_Lab4Theme
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -55,9 +58,9 @@ class MainActivity : ComponentActivity() {
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
                 locationResult.locations.forEach { location ->
-// Update UI with location data
+                    // Update UI with location data
                     userLocation.value = LatLng(location.latitude, location.longitude)
-// Update map or UI
+                    // Update map or UI
                 }
             }
         }
@@ -67,12 +70,12 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
         setContent {
-//            Pokaichao_COMP304Sec001_Lab4Theme {
-//                val navController = rememberNavController()
-//                AppNavigation(navController)
-//            }
+            Pokaichao_COMP304Sec001_Lab4Theme {
+                val navController = rememberNavController()
+                AppNavigation(navController, userLocation)
+            }
 
-            MapScreen2(fusedLocationClient, userLocation)
+//            MapScreen2(fusedLocationClient, userLocation)
         }
     }
 
@@ -115,10 +118,11 @@ class MainActivity : ComponentActivity() {
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun AppNavigation(navController: NavHostController) {
+fun AppNavigation(navController: NavHostController, locationState: State<LatLng>) {
     NavHost(navController, startDestination = "home") {
         composable("home") { HomeScreen(navController) }
         composable("category") { CategoryScreen() }
+        composable("map") { MapScreen2(navController, locationState) }
         composable("map/{locationName}") { backStackEntry ->
             val locationName = backStackEntry.arguments?.getString("locationName")
             locationName?.let { MapScreen(locationName, navController) }

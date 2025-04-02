@@ -44,27 +44,7 @@ import kotlin.coroutines.resume
 import com.google.android.gms.maps.CameraUpdateFactory
 
 @Composable
-fun MapScreen2(fusedLocationClient: FusedLocationProviderClient, locationState: State<LatLng>) {
-    val context = LocalContext.current
-    var userLocation by remember { mutableStateOf(LatLng(1.35, 103.87)) }
-
-//    val cameraPositionState = rememberCameraPositionState {
-//        position = CameraPosition.fromLatLngZoom(userLocation, 12f)
-//    }
-
-//    LaunchedEffect(Unit) {
-//        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
-//            PackageManager.PERMISSION_GRANTED
-//        ) {
-//            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-//                location?.let {
-//                    userLocation = LatLng(it.latitude, it.longitude)
-//                    cameraPositionState.position = CameraPosition.fromLatLngZoom(userLocation, 15f)
-//                }
-//            }
-//        }
-//    }
-
+fun MapScreen2(navController: NavHostController, locationState: State<LatLng>) {
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(locationState.value, 12f)
     }

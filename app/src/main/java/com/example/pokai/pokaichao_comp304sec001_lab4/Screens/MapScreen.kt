@@ -6,6 +6,10 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
+import android.os.Build
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -37,57 +41,184 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
+import androidx.activity.ComponentActivity
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TopAppBar
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import com.example.pokai.pokaichao_comp304sec001_lab4.PermissionRationaleDialog
+import com.example.pokai.pokaichao_comp304sec001_lab4.PermissionRequestButton
+import com.example.pokai.pokaichao_comp304sec001_lab4.RationaleState
+import com.example.pokai.pokaichao_comp304sec001_lab4.data.DataSource
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.shouldShowRationale
 
-@OptIn(ExperimentalPermissionsApi::class)
-@SuppressLint("UnrememberedMutableState")
+@OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
+@SuppressLint("UnrememberedMutableState", "PermissionLaunchedDuringComposition",
+    "CoroutineCreationDuringComposition"
+)
 @Composable
-fun MapScreen(navController: NavHostController) {
+fun MapScreen(selectedItem: String, navController: NavHostController) {
     val context = LocalContext.current
 
-    val locationManager = remember {
-        com.example.pokai.pokaichao_comp304sec001_lab4.Screens.LocationManager(
-            context,
-            LocationServices.getFusedLocationProviderClient(context)
-        )
-    }
+    val coarseLocationPermissionState = rememberPermissionState(
+        Manifest.permission.ACCESS_COARSE_LOCATION
+    )
 
-    val locationPermissions = rememberMultiplePermissionsState(
+    val fineLocationPermissionState = rememberMultiplePermissionsState(
         permissions = listOf(
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION
         )
     )
 
-    var location by remember { mutableStateOf<Location?>(null) }
+    val backgroundLocationPermissionState = rememberPermissionState(
+        Manifest.permission.ACCESS_BACKGROUND_LOCATION
+    )
+
+    val locationManager = remember {
+        LocationManager(
+            context,
+            LocationServices.getFusedLocationProviderClient(context)
+        )
+    }
+    var currentLocation by remember { mutableStateOf<Location?>(null) }
     val coroutineScope = rememberCoroutineScope()
 
-    if (!locationPermissions.allPermissionsGranted || locationPermissions.shouldShowRationale) {
-        locationPermissions.launchMultiplePermissionRequest()
+    if (!fineLocationPermissionState.allPermissionsGranted || fineLocationPermissionState.shouldShowRationale) {
+        fineLocationPermissionState.launchMultiplePermissionRequest()
     } else {
         coroutineScope.launch {
-            location = locationManager.getLocation()
+            currentLocation = locationManager.getLocation()
         }
     }
 
-    location?.let {
-            val loc = LatLng(it.latitude, it.longitude)
-//        val loc = LatLng(43.785179518472084, -79.22785228776489)
+    var currentLocationCoords = currentLocation?.let { LatLng(it.latitude,it.longitude) }
 
-        // rememberCameraPositionState() is a function that returns a CameraPositionState object
-        val cameraPositionState = rememberCameraPositionState {
-            position = CameraPosition.fromLatLngZoom(loc, 12f)
+    var rationaleState by remember {
+        mutableStateOf<RationaleState?>(null)
+    }
+
+    // Show rationale dialog when needed
+    rationaleState?.run { PermissionRationaleDialog(rationaleState = this) }
+
+    PermissionRequestButton(
+        isGranted = coarseLocationPermissionState.status.isGranted,
+        title = "Approximate location access",
+    ) {
+        if (coarseLocationPermissionState.status.shouldShowRationale) {
+            rationaleState = RationaleState(
+                "Request approximate location access",
+                "In order to use this feature please grant access by accepting " + "the location permission dialog." + "\n\nWould you like to continue?",
+            ) { proceed ->
+                if (proceed) {
+                    coarseLocationPermissionState.launchPermissionRequest()
+                }
+                rationaleState = null
+            }
+        } else {
+            coarseLocationPermissionState.launchPermissionRequest()
         }
+    }
+
+    PermissionRequestButton(
+        isGranted = fineLocationPermissionState.allPermissionsGranted,
+        title = "Precise location access",
+    ) {
+        if (fineLocationPermissionState.shouldShowRationale) {
+            rationaleState = RationaleState(
+                "Request Precise Location",
+                "In order to use this feature please grant access by accepting " + "the location permission dialog." + "\n\nWould you like to continue?",
+            ) { proceed ->
+                if (proceed) {
+                    fineLocationPermissionState.launchMultiplePermissionRequest()
+                }
+                rationaleState = null
+            }
+        } else {
+            fineLocationPermissionState.launchMultiplePermissionRequest()
+        }
+    }
+
+    PermissionRequestButton(
+        isGranted = backgroundLocationPermissionState.status.isGranted,
+        title = "Background location access",
+    ) {
+        if (backgroundLocationPermissionState.status.isGranted || fineLocationPermissionState.allPermissionsGranted) {
+            if (backgroundLocationPermissionState.status.shouldShowRationale) {
+                rationaleState = RationaleState(
+                    "Request background location",
+                    "In order to use this feature please grant access by accepting " + "the background location permission dialog." + "\n\nWould you like to continue?",
+                ) { proceed ->
+                    if (proceed) {
+                        backgroundLocationPermissionState.launchPermissionRequest()
+                    }
+                    rationaleState = null
+                }
+            } else {
+                backgroundLocationPermissionState.launchPermissionRequest()
+            }
+        } else {
+            Toast.makeText(
+                context,
+                "Please grant either Approximate location access permission or Fine" + "location access permission",
+                Toast.LENGTH_SHORT,
+            ).show()
+        }
+    }
+
+    // Default to a fallback location if the item is unknown
+    val location = DataSource.restaurantLocations[selectedItem] ?: LatLng(0.0, 0.0)
+
+    val cameraPositionState = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(location, 12f)  // Adjust zoom level as needed
+    }
+
+//    new code
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(text = "Map for $selectedItem") },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            painter = androidx.compose.ui.res.painterResource(id = android.R.drawable.ic_menu_revert),
+                            contentDescription = "Back",
+                            tint = Color.Black
+                        )
+                    }
+                }
+            )
+        }
+    ) { paddingValues ->
         GoogleMap(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
             cameraPositionState = cameraPositionState
         ) {
             Marker(
-                state = MarkerState(position = loc),
-                title = "Marker at my location"
+                state = com.google.maps.android.compose.MarkerState(position = location),
+                title = selectedItem,
+                snippet = "Location of $selectedItem"
             )
+            currentLocationCoords?.let { MarkerState(position = it) }?.let {
+                Marker(
+                    state = it,
+                    title = "Your Location"
+                )
+            }
         }
     }
 }
+
 
 @OptIn(ExperimentalPermissionsApi::class)
 @SuppressLint("UnrememberedMutableState")
